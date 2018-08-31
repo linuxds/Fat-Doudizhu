@@ -137,7 +137,8 @@ module Game{
 			//如果是我，展示出牌与不出牌框
 			if (seat == this.myInfo.seat) {
 				this.canSelect = true;
-				game.roomView.outYes.visible = false;
+				//game.roomView.outYes.visible = false;
+				game.roomView.outYes.visible = true;
 				game.roomView.outNo.visible = (cardType != Constants.PokerType.NO_CARDS);
 			} else {
 				this.canSelect = false;
