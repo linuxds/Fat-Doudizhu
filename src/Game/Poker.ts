@@ -2,7 +2,8 @@
 * name 
 */
 module Game{
-	export class Poker extends Laya.Image{
+	export class Poker extends Laya.Image
+	{
 		//index序号
 		protected _index:number;
 
@@ -14,7 +15,8 @@ module Game{
 		//图片
 		public img:string = "doudizhu/bg_poker.png";
 
-		constructor(){
+		constructor()
+		{
 			super();
 			this.width = 105;
 			this.height = 150;
@@ -28,11 +30,15 @@ module Game{
 
 		public switchStatus()
 		{
-			if (game.room.canSelect) {
+			if (game.room.canSelect) 
+			{
 				this.isSelected = ! this.isSelected;
-				if (this.isSelected) {
+				if (this.isSelected) 
+				{
 					this.y = -20;
-				} else {
+				} 
+				else 
+				{
 					this.y = 0;
 				}
 				game.room.checkOutPokers();
@@ -43,13 +49,19 @@ module Game{
 		{
 			this._index = value;
 			this.img = "poker/" + value + ".jpg";
-			if (value < 53) {
-				if (value % 4 == 0) {
+			if (value < 53) 
+			{
+				if (value % 4 == 0) 
+				{
 					this.point = value/4 + 2;
-				} else {
+				}
+				else 
+				{
 					this.point = Math.floor(value/4) + 3;
 				}
-			} else {
+			} 
+			else 
+			{
 				this.point = Math.floor(value/4) + 2 + value % 4;
 			}
 		}

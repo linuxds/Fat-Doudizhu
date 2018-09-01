@@ -48,12 +48,13 @@ module Game{
 					break;
 			}
 			this.socketManager = new Net.SocketManage(config.url);
-
 			this.room = new Room();
 			this.pokerLogic = new PokerLogic();
 
 			this.enterView = new GameView.EnterView();
 			this.roomView = new GameView.RoomView();
+
+
 			Laya.stage.addChild(this.enterView);
 		}
 
@@ -66,6 +67,31 @@ module Game{
 			this.socketManager.sendData(message, this.msgHandler.matchCallback, this.msgHandler);
 			this.enterView.isMatching.visible = true;
 			this.enterView.enter.visible = false;
+		}
+
+		public restart()
+		{
+			let message = new Net.Message();
+			message.command = Constants.MsgCode.RESTART;
+			message.content = { "name": this.gameId };
+			this.socketManager.sendData(message, this.msgHandler.matchCallback, this.msgHandler);
+
+			this.roomView.restart.visible = false;
+			this.roomView.scoreList.array = [];
+			this.roomView.scorePanel.visible = false;
+			this.roomView.removeChildren();
+			this.roomView.removeSelf();
+			this.roomView = null;
+
+			this.room.init();
+
+			if(!this.enterView)
+			{
+				this.enterView = new GameView.EnterView();
+			}
+			this.enterView.isMatching.visible = true;
+			this.enterView.enter.visible = false;
+			Laya.stage.addChild(this.enterView);
 		}
 	}
 }

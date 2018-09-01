@@ -3,6 +3,6 @@
 */
 module Config{
 	export class Local{
-		static url = 'ws://localhost:8181';
+		static url = 'ws://192.168.0.39:7003';
 	}
 }

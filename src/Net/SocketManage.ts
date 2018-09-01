@@ -38,14 +38,20 @@ module Net{
 			//console.log("Socket closed");
 		}
 
-		private onMessageReveived(message: any): void {
+		private onMessageReveived(message: any): void 
+		{
 			//console.log("Message from server:");
-			if (typeof message == "string") {
+			if (typeof message == "string") 
+			{
 				let data = JSON.parse(message);
-				if (data.seq && this.callbackPool[data.seq]) {
+
+				if (data.seq && this.callbackPool[data.seq]) 
+				{
 					this.callbackPool[data.seq][0].call(this.callbackPool[data.seq][1], data);
 					delete(this.callbackPool[data.seq]);
-				} else {
+				} 
+				else 
+				{
 					game.msgHandler.handle(data);
 				}
 			}

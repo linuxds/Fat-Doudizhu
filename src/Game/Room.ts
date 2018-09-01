@@ -50,19 +50,71 @@ module Game{
 
 		constructor()
 		{
-			this.myReadyPokers = new CardSet();
-			this.nowPokers = new CardSet();
-			for (let i = 0; i < 17; i++) {
-				this.leftPokers.push(game.poolManage.getPoker());
-				this.rightPokers.push(game.poolManage.getPoker());
-			}	
+			this.init();
+		}
+
+
+		public init():void
+		{
+			this.roomId = 0;
+
+			this.dizhu = -1;
+			this.nowSeat = -1;
+
+			if(this.myReadyPokers)
+			{
+				this.myReadyPokers.cards = [];
+				this.myReadyPokers.type = Constants.PokerType.ERROR_CARDS;
+			}
+			else
+			{
+				this.myReadyPokers = new CardSet();
+			}
+			
+			if(this.nowPokers)
+			{
+				this.nowPokers.cards = [];
+				this.nowPokers.type = Constants.PokerType.ERROR_CARDS;
+			}
+			else
+			{
+				this.nowPokers = new CardSet();
+			}
+
+			this.removeAllOutPokers();
+
+			
+			for(let i = 1; i <= 4;i++)	//把地主牌也算进去
+			{
+				let group = this.dizhuPokers;
+				
+				if (i == this.leftInfo.seat) 
+				{
+					group = this.leftPokers;
+				} 
+				else if (i == this.rightInfo.seat) 
+				{
+					group = this.rightOutPokers;
+				} 
+				else if(i == this.myInfo.seat)
+				{
+					group = this.myPokers = [];
+				}
+
+				group.forEach((poker, index, array) => {
+					poker.removeSelf();
+				});
+
+				group = [];
+			}
 		}
 
 		//收到游戏中消息
 		public onPlayGame(content:any)
 		{
 			let state = content.state;
-			switch (state) {
+			switch (state) 
+			{
 				case 0: //发牌了
 					let tempCards = content.cards.sort(function(a,b){return b-a});
 					this.refreshMyPokers(tempCards);
@@ -96,6 +148,12 @@ module Game{
 
 			game.roomView.scoreList.array = this.scoreList;
 			game.roomView.scorePanel.visible = true;
+
+			game.roomView.restart.visible = true;
+
+			// this.canSelect = false;
+			game.roomView.outYes.visible = false;
+			game.roomView.outNo.visible = false;
 		}
 
 		//出牌信息处理
@@ -109,13 +167,15 @@ module Game{
 			//console.log(content.curCard);
 			//上一轮出牌座位
 			let lastSeat = seat - 1;;
-			if (lastSeat == 0) {
+			if (lastSeat == 0) 
+			{
 				lastSeat = 3;
 			}
 
 			//当前出牌类型
 			let cardType = content.curCard.type;
-			switch (cardType) {
+			switch (cardType) 
+			{
 				case Constants.PokerType.NO_CARDS: //新一轮开始
 					//清空当前牌
 					this.removeAllOutPokers();
@@ -135,12 +195,15 @@ module Game{
 			}
 
 			//如果是我，展示出牌与不出牌框
-			if (seat == this.myInfo.seat) {
+			if (seat == this.myInfo.seat) 
+			{
 				this.canSelect = true;
-				//game.roomView.outYes.visible = false;
+				// game.roomView.outYes.visible = false;
 				game.roomView.outYes.visible = true;
 				game.roomView.outNo.visible = (cardType != Constants.PokerType.NO_CARDS);
-			} else {
+			} 
+			else 
+			{
 				this.canSelect = false;
 				game.roomView.outYes.visible = false;
 				game.roomView.outNo.visible = false;
@@ -152,7 +215,8 @@ module Game{
 		//出牌
 		public giveOutAction()
 		{
-			if (game.pokerLogic.canOut(this.nowPokers, this.myReadyPokers)) {
+			if (game.pokerLogic.canOut(this.nowPokers, this.myReadyPokers)) 
+			{
 				let data = new Net.Message();
 				data.command = Constants.MsgCode.PLAYER_PLAYCARD;
 				data.content = { roomId:this.roomId, index:this.myInfo.seat, curCards:{type: this.myReadyPokers.type, header:this.myReadyPokers.header, cards:this.myReadyPokers.cards}};
@@ -162,16 +226,21 @@ module Game{
 
 		public giveOutBack(data: Net.Message)
 		{
-			if(data.code == 0) {
+			if(data.code == 0) 
+			{
 				//已选择的牌从手牌中移除
 				let newPokers = new Array<Poker>();
 				this.myPokers.forEach((poker, index, array) => {
-					if (poker.isSelected) {
+					if (poker.isSelected) 
+					{
 						poker.removeSelf();
-					} else {
+					} 
+					else 
+					{
 						newPokers.push(poker);
 					}
 				});
+
 				this.myPokers = newPokers;
 
 				let i = 0;
@@ -190,6 +259,10 @@ module Game{
 
 				game.roomView.myPokerNum.text = '' + this.myPokers.length;
 			}
+			else if(data.code < 0)//出牌失敗
+			{
+				console.log("出牌失敗 code="+data.code);
+			}
 		}
 
 		//检查要出的牌
@@ -198,10 +271,12 @@ module Game{
 			//将选中的牌放入准备牌中
 			this.myReadyPokers.cards = [];
 			this.myPokers.forEach((poker, index, array) => {
-				if (poker.isSelected) {
+				if (poker.isSelected) 
+				{
 					this.myReadyPokers.cards.push(poker.index);
 				}
 			});
+
 			//计算牌型
 			this.myReadyPokers.type = game.pokerLogic.calcuPokerType(this.myReadyPokers.cards);
 
@@ -209,9 +284,12 @@ module Game{
 			this.myReadyPokers.header = game.pokerLogic.calcPokerHeader(this.myReadyPokers.cards, this.myReadyPokers.type);
 
 			//是否可出
-			if (game.pokerLogic.canOut(this.nowPokers, this.myReadyPokers)) {
+			if (game.pokerLogic.canOut(this.nowPokers, this.myReadyPokers)) 
+			{
 				game.roomView.outYes.visible = true;
-			} else {
+			} 
+			else 
+			{
 				game.roomView.outYes.visible = false;
 			}
 		}
@@ -220,13 +298,15 @@ module Game{
 		{
 			let data = new Net.Message();
         	data.command = Constants.MsgCode.PLAYER_PLAYCARD;
+			data.code	= 0;
         	data.content = { roomId:this.roomId, index:this.myInfo.seat, curCards:{ type:Constants.PokerType.PASS_CARDS, cards:[]}};
         	game.socketManager.sendData(data, this.passActionBack, this);
 		}
 
 		public passActionBack(data: Net.Message)
 		{
-			if(data.code == 0) {
+			if(data.code == 0) 
+			{
 				//还原已选择的牌
 				this.myPokers.forEach((poker, index, array) => {
 					poker.isSelected = false;
@@ -238,14 +318,17 @@ module Game{
 			}
 		}
 
-		public showOutPokers(seat:number, cards:any)
+		public showOutPokers(seat:number, cards:any) 
 		{
 			/*this.nowPokers.cards = cards.cards;
 			this.nowPokers.type = cards.type;
 			this.nowPokers.header = cards.header;*/
 			this.nowPokers = cards;
-			if (seat == this.myInfo.seat) {
-				for (let i = 0; i < cards.cards.length; i++) {
+
+			if (seat == this.myInfo.seat) 
+			{
+				for (let i = 0; i < cards.cards.length; i++) 
+				{
 					let poker = game.poolManage.getPoker();
 					poker.index = cards.cards[i];
 					this.myOutPokers.push(poker);
@@ -255,8 +338,11 @@ module Game{
 					game.roomView.myOutCard.addChild(poker);
 				}
 				//这里不用移除手牌，在出牌成功的时候自然会移除
-			} else if (seat == this.leftInfo.seat) {
-				for (let i = 0; i < cards.cards.length; i++) {
+			} 
+			else if (seat == this.leftInfo.seat) 
+			{
+				for (let i = 0; i < cards.cards.length; i++) 
+				{
 					let poker = game.poolManage.getPoker();
 					poker.index = cards.cards[i];
 					this.leftOutPokers.push(poker);
@@ -267,13 +353,17 @@ module Game{
 				}
 				//将最后的几张手牌移除即可
 				let len = this.leftPokers.length - 1;
-				for (let i = 0; i < cards.cards.length; i++) {
+				for (let i = 0; i < cards.cards.length; i++) 
+				{
 					this.leftPokers[len - i].removeSelf();
 				}
 				this.leftPokers.splice(this.leftPokers.length - cards.cards.length);
 				game.roomView.leftPokerNum.text = '' + this.leftPokers.length;
-			} else {
-				for (let i = 0; i < cards.cards.length; i++) {
+			} 
+			else 
+			{
+				for (let i = 0; i < cards.cards.length; i++) 
+				{
 					let poker = game.poolManage.getPoker();
 					poker.index = cards.cards[i];
 					this.rightOutPokers.push(poker);
@@ -283,7 +373,8 @@ module Game{
 					game.roomView.rightOutCard.addChild(poker);
 				}
 				let len = this.rightPokers.length - 1;
-				for (let i = 0; i < cards.cards.length; i++) {
+				for (let i = 0; i < cards.cards.length; i++) 
+				{
 					this.rightPokers[len - i].removeSelf();
 				}
 				this.rightPokers.splice(this.rightPokers.length - cards.cards.length);
@@ -294,19 +385,25 @@ module Game{
 		public removeOutPokers(seat: number): void
 		{
 			let group = this.myOutPokers;
-			if (seat == this.leftInfo.seat) {
+			if (seat == this.leftInfo.seat) 
+			{
 				group = this.leftOutPokers;
 				game.roomView.leftPass.visible = false;
-			} else if (seat == this.rightInfo.seat) {
+			} 
+			else if (seat == this.rightInfo.seat) 
+			{
 				group = this.rightOutPokers;
 				game.roomView.rightPass.visible = false;
-			} else {
+			} 
+			else 
+			{
 				game.roomView.myPass.visible = false;
 			}
 
 			group.forEach((poker, index, array) => {
 				poker.removeSelf();
 			});
+
 			group = [];
 		}
 
@@ -323,19 +420,28 @@ module Game{
 				});
 				groupItem = [];
 			});
-			game.roomView.myPass.visible = false;
-			game.roomView.leftPass.visible = false;
-			game.roomView.rightPass.visible = false;
+
+			if(game.roomView)
+			{
+				game.roomView.myPass.visible = false;
+				game.roomView.leftPass.visible = false;
+				game.roomView.rightPass.visible = false;
+			}
 		}
 
 		//展示不要框
 		public showPass(seat:number)
 		{
-			if (seat == this.myInfo.seat) {
+			if (seat == this.myInfo.seat) 
+			{
 				game.roomView.myPass.visible = true;
-			} else if (seat == this.leftInfo.seat) {
+			} 
+			else if (seat == this.leftInfo.seat) 
+			{
 				game.roomView.leftPass.visible = true;
-			} else {
+			} 
+			else 
+			{
 				game.roomView.rightPass.visible = true;
 			}
 		}
@@ -361,6 +467,13 @@ module Game{
 			game.roomView.rightPokerNum.visible = true;
 			game.roomView.myPokerNum.text = '17';
 			game.roomView.myPokerNum.visible = true;
+
+			for(let i = 0; i < 17; i++)
+			{
+				this.leftPokers.push(game.poolManage.getPoker());
+				this.rightPokers.push(game.poolManage.getPoker());
+			}
+
 
 			let i = 0;
 			this.myPokers.forEach((poker, index, array) => {
@@ -392,26 +505,40 @@ module Game{
 		public onWantDiZhu(content:any):void
 		{
 			//有地主了，展示地主信息
-			if (content.dizhu != undefined) {
+			if (content.dizhu != undefined) 
+			{
 				this.showDizhu(content.dizhu, content.dizhuCards);
-			} else {
+			} 
+			else if(content.nowScore == 0 && content.giveup == 3)//都放弃了
+			{
+				game.restart();
+			}
+			else 
+			{
 				//如果轮到自己，展示抢地主选项
 				let seat = content.curPlayerIndex;
         		let nowScore = content.nowScore;
 				this.showCouldAction(seat);
-				if (seat == this.myInfo.seat) {
+				if (seat == this.myInfo.seat) 
+				{
 					game.roomView.qiangdizhu.visible = true;
 					//不抢始终显示
 					game.roomView.giveup.visible = true;
 					//显示比当前分大的按钮
-					for (let i = 1; i <= 3; i++) {
-						if (i <= nowScore) {
+					for (let i = 1; i <= 3; i++) 
+					{
+						if (i <= nowScore) 
+						{
 							game.roomView['score'+i].visible = false;
-						} else {
+						} 
+						else 
+						{
 							game.roomView['score'+i].visible = true;
 						}
 					}
-				} else {
+				} 
+				else 
+				{
 					game.roomView.qiangdizhu.visible = false;
 				}
 			}
@@ -429,7 +556,8 @@ module Game{
 		//抢地主回调
 		public wantDizhuBack(data: Net.Message): void
 		{
-			if (data.code == 0) {
+			if (data.code == 0) 
+			{
 				game.roomView.qiangdizhu.visible = false;
 			}
 		}
@@ -446,15 +574,20 @@ module Game{
 		//展示行动信息
 		public showCouldAction(seat:number):void
 		{
-			if (seat == this.myInfo.seat) {
+			if (seat == this.myInfo.seat) 
+			{
 				game.roomView.myAction.visible = true;
 				game.roomView.leftAction.visible = false;
 				game.roomView.rightAction.visible = false;
-			} else if (seat == this.leftInfo.seat) {
+			} 
+			else if (seat == this.leftInfo.seat) 
+			{
 				game.roomView.myAction.visible = false;
 				game.roomView.leftAction.visible = true;
 				game.roomView.rightAction.visible = false;
-			} else {
+			} 
+			else 
+			{
 				game.roomView.myAction.visible = false;
 				game.roomView.leftAction.visible = false;
 				game.roomView.rightAction.visible = true;
@@ -480,7 +613,9 @@ module Game{
 
 			//地主图标
 			game.roomView.dizhuhead.visible = true;
-			if (dizhu == this.myInfo.seat) {
+
+			if (dizhu == this.myInfo.seat) 
+			{
 				game.roomView.dizhuhead.pos(478, 718);
 				//加入手牌，并重新排序
 				dizhuCards.forEach((value, index, array) => {
@@ -491,7 +626,9 @@ module Game{
 					poker.on(Laya.Event.CLICK, poker, poker.switchStatus);
 					game.roomView.myCard.addChild(poker);
 				});
+
 				this.myPokers.sort(function(a,b){return b.index-a.index});
+
 				let i = 0;
 				this.myPokers.forEach((poker, index, array) => {
 					poker.x = (i++)*30;
@@ -499,7 +636,9 @@ module Game{
 					poker.zOrder = i;
 				});
 				game.roomView.myPokerNum.text = '20';
-			} else if (dizhu == this.leftInfo.seat) {
+			} 
+			else if (dizhu == this.leftInfo.seat) 
+			{
 				game.roomView.dizhuhead.pos(5, 300);
 				//加入手牌展示即可
 				let i = 17;
@@ -512,7 +651,9 @@ module Game{
 					game.roomView.leftCard.addChild(poker);
 				});
 				game.roomView.leftPokerNum.text = '20';
-			} else {
+			} 
+			else 
+			{
 				let i = 17;
 				dizhuCards.forEach((value, index, array) => {
 					let poker = game.poolManage.getPoker();
@@ -544,14 +685,16 @@ module Game{
 						this.rightInfo.seat = 1;
                         this.leftInfo.name = '2号位：' + players[1];
                         this.leftInfo.seat = 2;
-                    }else if(i == 0)
+                    }
+					else if(i == 0)
                     {
                         this.rightInfo.name = '2号位：' + players[1];
 						this.rightInfo.seat = 2;
                         this.leftInfo.name = '3号位：' + players[2];
                         this.leftInfo.seat = 3;
                         
-                    }else
+                    }
+					else
                     {
                         this.rightInfo.name = '3号位：' + players[2];
 						this.rightInfo.seat = 3;

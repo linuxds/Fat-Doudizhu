@@ -2,7 +2,7 @@
     "x":0,
     "type":"View",
     "selectedBox":1,
-    "selecteID":61,
+    "selecteID":67,
     "props":{"y":3,"width":1200,"sceneColor":"#b3c5d7","left":-6,"height":800},
     "nodeParent":-1,
     "label":"View",
@@ -655,6 +655,19 @@
             "isAniNode":true,
             "hasChild":false,
             "compId":64,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Button",
+            "props":{"y":383,"x":543,"width":90,"visible":false,"var":"restart","skin":"comp/button.png","labelSize":20,"label":"重新开始","height":41},
+            "nodeParent":1,
+            "label":"Button(restart)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":67,
             "child":[
                 ]
         }],
